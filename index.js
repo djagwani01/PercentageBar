@@ -1,5 +1,13 @@
+const constants = {
+    START: 'start',
+    RESET: 'reset'
+}
+
+let reset = false,
+    isLoading = false
+
 const mainBar = document.querySelector('.mainBar');
-const loadingBtn = document.getElementById('btnContainer').children[0];
+const btnContainer = document.getElementById('btnContainer')
 
 const percentageBar = document.createElement('div');
 percentageBar.setAttribute('id', 'percentageBar');
@@ -31,9 +39,9 @@ const getPercentage = (initialValue, targetValue) => {
 }
 
 const startLoading = () => {
-    loadingBtn.style.backgroundColor = 'rgba(0, 120, 0, 1)'
+    btnContainer.children[0].style.backgroundColor = 'rgba(0, 120, 0, 1)'
     setTimeout(() => {
-        loadingBtn.style.backgroundColor = 'rgba(0, 150, 0, 1)'
+        btnContainer.children[0].style.backgroundColor = 'rgba(0, 150, 0, 1)'
     }, 200)
 
     const mainBarStyles = getComputedStyle(mainBar)
@@ -47,20 +55,41 @@ const startLoading = () => {
     Object.assign(percentageBar.style, percentageBarStyles)
     percentageBar.parentNode === null ? mainBar.appendChild(percentageBar) : null
 
-
     let percentageBarWidth = 0,
         targetWidth = Number(mainBarStyles.width.split('px')[0])
 
-
-    const loadingInterval = setInterval(() => {
-        if(percentageBarWidth < targetWidth){
-            percentageBarWidth += 50
-            percentageBar.style.width = `${percentageBarWidth}px`
-            percentageElement.innerHTML = `${String(getPercentage(percentageBarWidth, targetWidth))}%`
-        } else{
+    const loadingInterval = !isLoading && setInterval(() => {
+        isLoading = true
+        if(reset){
             clearInterval(loadingInterval)
+            reset = false
+            isLoading = false
+            return
+        } else {
+            if(percentageBarWidth < targetWidth){
+                percentageBarWidth += 50
+                percentageBar.style.width = `${percentageBarWidth}px`
+                percentageElement.innerHTML = `${String(getPercentage(percentageBarWidth, targetWidth))}%`
+            } else{
+                clearInterval(loadingInterval)
+                isLoading = false
+            }
         }
     }, 500)
 }
 
-loadingBtn.addEventListener('click', startLoading)
+const resetLoading = () => {
+    reset = Number(percentageElement.innerHTML.split('%')[0]) !== 100 ? true : false
+    btnContainer.children[1].style.backgroundColor = 'rgba(0, 120, 0, 1)'
+    setTimeout(() => {
+        btnContainer.children[1].style.backgroundColor = 'rgba(0, 150, 0, 1)'
+    }, 200)
+    percentageBar.style.width = 0
+    percentageElement.innerHTML = `0%`
+}
+
+const btnAction = (e) => {
+    e.target['id'] === constants.START ? startLoading() : resetLoading()
+}
+
+btnContainer.addEventListener('click', btnAction)
